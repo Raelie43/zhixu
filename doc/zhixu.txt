@@ -1,0 +1,152 @@
+*zhixu.txt*  Zhixu colorscheme -- everything in its place
+
+==============================================================================
+CONTENTS                                                     *zhixu* *zhixu.nvim*
+
+    Usage ...................................................... |zhixu-usage|
+    Configuration ............................................. |zhixu-config|
+    Integrations ........................................ |zhixu-integrations|
+    API .......................................................... |zhixu-api|
+    Syntax .................................................... |zhixu-syntax|
+
+==============================================================================
+USAGE                                                             *zhixu-usage*
+
+Requires Neovim 0.10 or newer and a true-color terminal. Install this repository
+with a plugin manager. With built-in vim.pack (Neovim 0.12+): >lua
+
+    vim.pack.add({
+      { src = "https://github.com/raelie43/zhixu", version = "main" },
+    })
+    vim.cmd.colorscheme("zhixu")
+<
+The example follows main; use a published release tag to pin it. Setup() goes
+between vim.pack.add() and the colorscheme command. With other managers, install
+the repository and run :colorscheme zhixu.
+
+Setup is optional. The theme enables 'termguicolors' and sets 'background' to
+"dark". No plugins or external executables are required at runtime.
+
+Colors are static hex values in lua/zhixu/palette.lua. The runtime never reads
+PALETTE.md, decodes JSON, or runs a generator. It registers no autocommands,
+timers, jobs, or per-edit callbacks. Theme code runs only when applied.
+
+==============================================================================
+CONFIGURATION                                                    *zhixu-config*
+
+Configure before loading the colorscheme: >lua
+
+    require("zhixu").setup({
+      transparent = false,
+      terminal_colors = true,
+      styles = {
+        comments = {},
+        keywords = {},
+        functions = {},
+        variables = {},
+      },
+      integrations = true,
+    })
+    vim.cmd.colorscheme("zhixu")
+<
+Every setup() call starts from defaults. Reload with :colorscheme zhixu to apply
+changes. Invalid option names and option types raise an error.
+
+transparent ~
+    Remove editor, float, sidebar, status line, and tab backgrounds. Selections,
+    search matches, diffs, notifications, and mode indicators retain their fills.
+    The default is false, preserving the approved opaque charcoal surfaces.
+
+terminal_colors ~
+    Set all 16 g:terminal_color_* globals from the exported ANSI palette. Set to
+    false to leave existing terminal globals untouched.
+
+styles ~
+    Optional highlight attributes for comments, keywords, functions, and
+    variables. All are regular text by default. Example: >lua
+
+    require("zhixu").setup({ styles = { comments = { italic = true } } })
+<
+    Markdown emphasis retains its explicit bold/italic formatting.
+
+on_colors ~
+    Function receiving a fresh palette. Modify its nested tables before highlight
+    groups are built. Sections: core, extensions, ansi, opaque_over_background.
+
+on_highlights ~
+    Function receiving (highlights, palette) after every integration is built.
+    Modify the highlights table directly. Example: >lua
+
+    require("zhixu").setup({
+      on_highlights = function(hl, palette)
+        hl.FloatBorder = { fg = palette.core.ui_dim }
+      end,
+    })
+<
+    Both callbacks run on each load. Return values are ignored.
+
+==============================================================================
+INTEGRATIONS                                               *zhixu-integrations*
+
+All plugin highlight groups are enabled by default and registered without
+requiring the plugins. Set integrations = false to disable all, or use a table
+to disable individual integrations. Unspecified entries remain enabled: >lua
+
+    require("zhixu").setup({
+      integrations = { blink = false, telescope = false },
+    })
+<
+Supported keys:
+    mini, telescope, fzf_lua, blink, cmp, oil, gitsigns, which_key, lazy, mason,
+    notify, noice, snacks, trouble, nvim_tree, neo_tree, indent_blankline,
+    bufferline, flash, dashboard, alpha, render_markdown.
+
+mini includes pick, files, icons, statusline, tabline, clue, completion, snippets,
+diff, indentscope, starter, notify, jump, cursorword, hipatterns, map, and others.
+
+Lualine includes a separate theme module. Configure after setting up Zhixu: >lua
+
+    require("lualine").setup({ options = { theme = "zhixu" } })
+<
+fzf-lua is highlighted automatically. fzf.vim uses g:fzf_colors; opt in with: >lua
+
+    vim.g.fzf_colors = require("zhixu").fzf_colors()
+<
+==============================================================================
+API                                                                *zhixu-api*
+
+require("zhixu").setup({opts})                                 *zhixu.setup()*
+    Store configuration for the next colorscheme load. Nil resets to defaults.
+
+require("zhixu").get_palette()                          *zhixu.get_palette()*
+    Return an independent copy of the palette with on_colors applied. Changes
+    to the returned table never alter the original checked-in palette.
+
+require("zhixu").fzf_colors()                            *zhixu.fzf_colors()*
+    Return fresh g:fzf_colors highlight references. Does not modify the global.
+
+require("zhixu").load()                                       *zhixu.load()*
+    Apply the stored configuration. Prefer :colorscheme zhixu for the usual
+    ColorScheme event lifecycle.
+
+==============================================================================
+SYNTAX                                                          *zhixu-syntax*
+
+Apricot keywords, sage types, lavender strings, slate comments, blue function
+calls, mauve numbers, bronze builtin functions, and warm neutral declarations.
+
+Tree-sitter declaration captures @function and @function.method remain neutral.
+@function.call and @function.method.call are blue. Shared Vim Function and LSP
+function/method groups are blue. Explicit builtin groups remain bronze; builtin
+variables are mauve and builtin types remain green.
+
+Visual selections, searches, reference highlights, and diff groups set only a
+background to preserve syntax foregrounds. Diagnostic underlines set sp without
+overriding token colors. Transparent overlays use exact opaque fallbacks from
+PALETTE.md. Documentation captures use slate, including @string.documentation.
+
+Use :Inspect to check grammar or LSP captures. A colorscheme cannot reclassify
+tokens that a parser does not identify. Use on_highlights for language-specific
+adjustments when necessary.
+
+ vim:tw=78:ts=8:noet:ft=help:norl:
